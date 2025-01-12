@@ -28,3 +28,4 @@ RUN rm -rf /workspace
 RUN virtualenv /venv
 ENV PATH=/venv/bin:$PATH
 ENV VIRTUAL_ENV /venv
+RUN pip install paramiko
