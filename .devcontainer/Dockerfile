@@ -3,7 +3,7 @@ FROM alpine:latest
 # Updates the base image and installs all required tools to build WolfSSH and WolfSSL
 # It also installs python and pip for Python script developpement
 RUN apk update && \
-    apk add --virtual build-essentials build-base gcc gdb autoconf automake libtool git py3-pip
+    apk add --virtual build-essentials build-base gcc gdb autoconf automake libtool git py3-pip py3-virtualenv
 
 RUN mkdir -p /workspace
 
@@ -23,3 +23,8 @@ RUN ./autogen.sh && \
 # Cleanup stuffs
 WORKDIR /
 RUN rm -rf /workspace
+
+# Setup python venv for python development
+RUN virtualenv /venv
+ENV PATH=/venv/bin:$PATH
+ENV VIRTUAL_ENV /venv
