@@ -20,12 +20,21 @@ RUN ./autogen.sh && \
     make -j4 && \
     make install
 
-# Cleanup stuffs
-WORKDIR /
-RUN rm -rf /workspace
+ENV WOLFSSH_VERSION=1.4.6-stable
+RUN wget https://github.com/wolfSSL/wolfssh/archive/refs/tags/v${WOLFSSH_VERSION}.zip -O /workspace/wolfssh.zip && \
+    unzip /workspace/wolfssh.zip -d /workspace && mv /workspace/wolfssh-${WOLFSSH_VERSION} /workspace/wolfssh && rm /workspace/wolfssh.zip
+
+# Bulding aand installing WolfSSH
+WORKDIR /workspace/wolfssh
+RUN ./autogen.sh && \
+    ./configure --with-wolfssl=/usr/local --enable-sftp LDFLAGS="-g -O0" CFLAGS="-fsanitize=address -g -O0" && \
+    make -j4
 
 # Setup python venv for python development
 RUN virtualenv /venv
 ENV PATH=/venv/bin:$PATH
 ENV VIRTUAL_ENV /venv
 RUN pip install paramiko
+
+EXPOSE 22222
+CMD [ "/workspace/wolfssh/examples/echoserver/echoserver", "-f" ]
