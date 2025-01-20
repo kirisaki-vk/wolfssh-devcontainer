@@ -1,9 +1,9 @@
-FROM alpine:latest
+FROM ubuntu:latest
 
 # Updates the base image and installs all required tools to build WolfSSH and WolfSSL
 # It also installs python and pip for Python script developpement
-RUN apk update && \
-    apk add --virtual build-essentials build-base gcc gdb autoconf automake libtool git py3-pip py3-virtualenv
+RUN apt update && apt upgrade && \
+    apt install -y build-essential gdb wget unzip autoconf libtool
 
 RUN mkdir -p /workspace
 
@@ -20,6 +20,8 @@ RUN ./autogen.sh && \
     make -j4 && \
     make install
 
+RUN ldconfig
+
 ENV WOLFSSH_VERSION=1.4.6-stable
 RUN wget https://github.com/wolfSSL/wolfssh/archive/refs/tags/v${WOLFSSH_VERSION}.zip -O /workspace/wolfssh.zip && \
     unzip /workspace/wolfssh.zip -d /workspace && mv /workspace/wolfssh-${WOLFSSH_VERSION} /workspace/wolfssh && rm /workspace/wolfssh.zip
@@ -27,14 +29,8 @@ RUN wget https://github.com/wolfSSL/wolfssh/archive/refs/tags/v${WOLFSSH_VERSION
 # Bulding aand installing WolfSSH
 WORKDIR /workspace/wolfssh
 RUN ./autogen.sh && \
-    ./configure --with-wolfssl=/usr/local --enable-sftp LDFLAGS="-g -O0" CFLAGS="-fsanitize=address -g -O0" && \
+    ./configure --enable-sftp CFLAGS="-fsanitize=address -g -O0" && \
     make -j4
-
-# Setup python venv for python development
-RUN virtualenv /venv
-ENV PATH=/venv/bin:$PATH
-ENV VIRTUAL_ENV /venv
-RUN pip install paramiko
 
 EXPOSE 22222
 CMD [ "/workspace/wolfssh/examples/echoserver/echoserver", "-f" ]
